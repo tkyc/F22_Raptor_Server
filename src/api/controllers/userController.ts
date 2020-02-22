@@ -11,15 +11,13 @@ dotenv.config({path: resolve(__dirname, "../../../.env")});
 const userController = {
 
     loginUser: async (req: Request, res: Response): Promise<void> => {
-        const { username, password }: { username: String, password: String} = req.body;
+        const { username, password }: { username: String, password: String } = req.body;
         try {
             const user: any = (await req.db.execute("SELECT users.id, users.username, users.password, users.tokenId FROM users WHERE username = ?", [username]))[0][0];
             const isMatch: Boolean = await bcrypt.compare(password, user.password);
 
             if (user && isMatch) {
                 res.cookie("refresh_token", issueToken("REFRESH", user.id, user.tokenId), {httpOnly: true});
-                //res.cookie("access_token", issueToken("ACCESS", user.id), {httpOnly: true});
-                //res.status(200).send("Login successful.");
                 res.status(200).send(issueToken("ACCESS", user.id));
             } else {
                 res.status(400).send("Invalid credentials.");
@@ -79,6 +77,19 @@ const userController = {
                 console.log(exception.message);
                 res.status("401").send(exception.message);
             }
+        }
+    },
+
+    fetchUserDetails: async (req: Request, res: Response): Promise<void> => {
+        try {
+            const { username, firstname, lastname, email, birthday }: 
+                  { username: String, firstname: String, lastname: String, email: String, birthday: Date } 
+                  = (await req.db.execute("SELECT * FROM users WHERE users.id = ?", [req.userId]))[0][0];
+
+            res.status(200).json({username: username, firstname: firstname, lastname: lastname, email: email, birthday: birthday});
+        } catch (exception) {
+            console.log(exception.message);
+            res.status(500).send(exception.message);
         }
     }
 };

@@ -14,11 +14,11 @@ const VERSION  = "/api/v1/";
 const API = express();
 
 //Middleware
-API.use((req, __, next) => { req.db = db; next()});
 API.use(express.urlencoded({extended: false}));
 API.use(express.json());
 API.use(cors({origin: "http://localhost:3000", credentials: true}));
 API.use(cookieParser());
+API.use((req, __, next) => { req.db = db; next()});
 
 //Routes
 API.use(`${VERSION}`, userRouter);
